@@ -893,4 +893,3 @@ namespace Client.MirScenes.Dialogs
     }
 
 }
-
