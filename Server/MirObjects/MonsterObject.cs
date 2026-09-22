@@ -850,6 +850,7 @@ namespace Server.MirObjects
         }
         public virtual void RefreshNameColour(bool send = true)
         {
+            if (Envir.Valor.IsObjective(this)) return;
             if (ShockTime < Envir.Time) BindingShotCenter = false;
 
             Color colour = Color.White;
@@ -2439,6 +2440,7 @@ namespace Server.MirObjects
             if (Dead) return false;
             if (Envir.Valor.IsObjective(this)) return Envir.Valor.CanAttackObjective(this, attacker);
             if (Master == null) return true;
+            if (Envir.Valor.TryGetPetRelationship(this, attacker, out bool valorPetAttack)) return valorPetAttack;
 
             if (attacker.Race == ObjectType.Hero)
                 attacker = ((HeroObject)attacker).Owner;
@@ -2689,12 +2691,14 @@ namespace Server.MirObjects
 
             BroadcastDamageIndicator(DamageType.Hit, armour - damage);
 
+            Envir.Valor.RecordDamage(this, attacker);
             ChangeHP(armour - damage);
             return damage - armour;
         }
 
         public override int Attacked(MonsterObject attacker, int damage, DefenceType type = DefenceType.ACAgility)
         {
+            if (Envir.Valor.IsObjective(this) && !Envir.Valor.CanAttackObjective(this, attacker)) return 0;
             if (Target == null && attacker.IsAttackTarget(this))
                 Target = attacker;
 
@@ -2753,6 +2757,7 @@ namespace Server.MirObjects
 
             BroadcastDamageIndicator(DamageType.Hit, armour - damage);
 
+            Envir.Valor.RecordDamage(this, attacker);
             ChangeHP(armour - damage);
             return damage - armour;
         }
