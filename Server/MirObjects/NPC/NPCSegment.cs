@@ -449,6 +449,20 @@ namespace Server.MirObjects
 
             switch (parts[0].ToUpper())
             {
+                case "VALOROPEN":
+                    acts.Add(new NPCActions(ActionType.ValorOpen));
+                    break;
+                case "VALORREGISTER":
+                    acts.Add(new NPCActions(ActionType.ValorRegister));
+                    break;
+                case "VALORHONOR":
+                    acts.Add(new NPCActions(ActionType.ValorHonor));
+                    break;
+                case "VALORREWARD":
+                    if (parts.Length < 2) return;
+                    acts.Add(new NPCActions(ActionType.ValorReward, parts[1]));
+                    break;
+
                 case "MOVE":
                     if (parts.Length < 2) return;
 
