@@ -116,5 +116,9 @@
         GTCancelSale,
         HeroGiveSkill,
         HeroRemoveSkill,
+        ValorOpen,
+        ValorRegister,
+        ValorHonor,
+        ValorReward,
     }
 }

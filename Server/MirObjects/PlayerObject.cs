@@ -596,7 +596,8 @@ namespace Server.MirObjects
                 }
             }
 
-            if (LastHitter != null && LastHitter.Race == ObjectType.Player)
+            bool valorDeath = Envir.Valor.IsParticipant(this);
+            if (!valorDeath && LastHitter != null && LastHitter.Race == ObjectType.Player)
             {
                 PlayerObject hitter = (PlayerObject)LastHitter;
 
@@ -635,13 +636,15 @@ namespace Server.MirObjects
             RemoveBuff(BuffType.MagicShield);
             RemoveBuff(BuffType.ElementalBarrier);
 
-            if (PKPoints > 200)
-                RedDeathDrop(LastHitter);
-            else if (!InSafeZone)
-                DeathDrop(LastHitter);
+            if (!valorDeath)
+            {
+                if (PKPoints > 200) RedDeathDrop(LastHitter);
+                else if (!InSafeZone) DeathDrop(LastHitter);
+            }
 
             HP = 0;
             Dead = true;
+            if (valorDeath) Envir.Valor.OnPlayerDeath(this);
 
             LogTime = Envir.Time;
             BrownTime = Envir.Time;
@@ -1063,12 +1066,21 @@ namespace Server.MirObjects
         }
         protected override void SetBindSafeZone(SafeZoneInfo szi)
         {
+            if (Envir.Valor.IsMap(CurrentMap)) return;
             BindLocation = szi.Location;
             BindMapIndex = CurrentMapIndex;
         }
         public void StartGame()
         {
             Map temp = Envir.GetMap(CurrentMapIndex);
+            bool reconnectingFromValor = AMode == AttackMode.Valor;
+            if (reconnectingFromValor) AMode = AttackMode.Peace;
+            if (reconnectingFromValor || Envir.Valor.IsMap(temp))
+            {
+                temp = Envir.GetMap(BindMapIndex);
+                CurrentMapIndex = BindMapIndex;
+                CurrentLocation = BindLocation;
+            }
 
             if (temp != null && temp.Info.NoReconnect)
             {
@@ -1450,6 +1462,7 @@ namespace Server.MirObjects
         }
         public override bool Teleport(Map temp, Point location, bool effects = true, byte effectnumber = 0)
         {
+            if (temp == null || !Envir.Valor.CanEnter(this, temp)) return false;
             Map oldMap = CurrentMap;
             Point oldLocation = CurrentLocation;
             bool mapChanged = temp != oldMap;
@@ -1485,6 +1498,7 @@ namespace Server.MirObjects
 
             if (mapChanged)
             {
+                Envir.Valor.OnMapChanged(this);
                 ApplyMapEntryRules(mapChanged);
             }
 
@@ -1852,6 +1866,7 @@ namespace Server.MirObjects
 
             if (human is PlayerObject player)
             {
+                if (Envir.Valor.TryGetNameColour(player, out Color valorColour)) return valorColour;
                 if (player.PKPoints >= 200)
                     return Color.Red;
 
@@ -1966,6 +1981,17 @@ namespace Server.MirObjects
                 parts = message.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
 
                 if (parts.Length == 0) return;
+
+                if (parts[0].Equals("ValorStart", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (IsGM) Envir.Valor.Open(this, true);
+                    else ReceiveChat("This command requires GM access.", ChatType.System);
+                    return;
+                }
+                if (parts[0].Equals("ValorLeave", StringComparison.OrdinalIgnoreCase))
+                { Envir.Valor.Leave(this); return; }
+                if (parts[0].Equals("ValorHonor", StringComparison.OrdinalIgnoreCase))
+                { Envir.Valor.ShowHonor(this); return; }
 
                 PlayerObject player = Envir.GetPlayer(parts[0]);
 
@@ -4163,8 +4189,11 @@ namespace Server.MirObjects
 
                 p = new S.ObjectChat { ObjectID = ObjectID, Text = message, Type = ChatType.Normal };
 
-                Enqueue(p);
-                Broadcast(p);
+                if (!Envir.Valor.RouteNormalChat(this, p))
+                {
+                    Enqueue(p);
+                    Broadcast(p);
+                }
             }
         }
         private string ProcessChatItems(string text, List<PlayerObject> recipients, List<ChatItem> chatItems)
@@ -4654,6 +4683,9 @@ namespace Server.MirObjects
             if (Dead || InSafeZone || attacker.InSafeZone || attacker == this || GMGameMaster) return false;
             if (CurrentMap.Info.NoFight) return false;
 
+            if (Envir.Valor.TryGetRelationship(this, attacker as PlayerObject, out bool valorAttack))
+                return valorAttack;
+
             switch (attacker.AMode)
             {
                 case AttackMode.All:
@@ -4679,6 +4711,10 @@ namespace Server.MirObjects
             if (attacker.Info.AI == 6 || attacker.Info.AI == 58 || attacker.Info.AI == 113) return PKPoints >= 200;
             if (attacker.Master == null) return true;
             if (InSafeZone || attacker.InSafeZone || attacker.Master.InSafeZone) return false;
+
+            PlayerObject valorPetOwner = attacker.Master as PlayerObject;
+            if (attacker.Master is HeroObject valorHero) valorPetOwner = valorHero.Owner;
+            if (Envir.Valor.TryGetRelationship(this, valorPetOwner, out bool valorPetAttack)) return valorPetAttack;
 
             if (LastHitter != attacker.Master && attacker.Master.LastHitter != this)
             {
@@ -4718,6 +4754,9 @@ namespace Server.MirObjects
         {
             if (ally == this) return true;
             if (ally == Hero) return true;
+            var valorAlly = ally is HeroObject hero ? hero.Owner : ally as PlayerObject;
+            if (Envir.Valor.TryGetRelationship(this, valorAlly, out bool hostile))
+                return Envir.Valor.IsParticipant(this) && Envir.Valor.IsParticipant(valorAlly) && !hostile;
 
             switch (ally.AMode)
             {
@@ -10328,6 +10367,7 @@ namespace Server.MirObjects
 
         public override bool AtWar(HumanObject attacker)
         {
+            if (Envir.Valor.IsParticipant(this)) return true;
             if (CurrentMap.Info.Fight) return true;
 
             if (MyGuild == null) return false;

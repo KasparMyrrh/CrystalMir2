@@ -142,6 +142,7 @@ namespace Client.MirScenes
         public NoticeDialog NoticeDialog;
 
         public TimerDialog TimerControl;
+        public ValorStatusDialog ValorStatusControl;
         public CompassDialog CompassControl;
         public RollDialog RollControl;
 
@@ -392,6 +393,7 @@ namespace Client.MirScenes
             KeyboardLayoutDialog = new KeyboardLayoutDialog { Parent = this, Visible = false };
 
             TimerControl = new TimerDialog { Parent = this, Visible = false };
+            ValorStatusControl = new ValorStatusDialog { Parent = this, Visible = false };
             CompassControl = new CompassDialog { Parent = this, Visible = false };
             RollControl = new RollDialog { Parent = this, Visible = false };
 
@@ -508,6 +510,8 @@ namespace Client.MirScenes
                 GameScene.Scene.KeyboardLayoutDialog.CheckNewInput(e);
                 return;
             }
+
+            if (e.KeyCode == Keys.Escape) ValorStatusControl?.CloseBoard();
 
             foreach (KeyBind KeyCheck in CMain.InputKeys.Keylist)
             {
@@ -666,6 +670,7 @@ namespace Client.MirScenes
                         return;
 
                     case KeybindOptions.Closeall:
+                        ValorStatusControl?.CloseBoard();
                         InventoryDialog.Hide();
                         CharacterDialog.Hide();
                         OptionDialog.Hide();
@@ -1266,9 +1271,9 @@ namespace Client.MirScenes
                 GuildBuffLabel.Location = new Point(x, y);
             }
 
-            if (!User.Dead) ShowReviveMessage = false;
+            if (!User.Dead || ValorStatusControl.Active) ShowReviveMessage = false;
 
-            if (ShowReviveMessage && CMain.Time > User.DeadTime && User.CurrentAction == MirAction.Dead)
+            if (ShowReviveMessage && !ValorStatusControl.Active && CMain.Time > User.DeadTime && User.CurrentAction == MirAction.Dead)
             {
                 ShowReviveMessage = false;
                 MirMessageBox messageBox = new MirMessageBox(GameLanguage.ClientTextMap.GetLocalization(ClientTextKeys.DiedTip), MirMessageBoxButtons.YesNo, false);
@@ -2113,6 +2118,9 @@ namespace Client.MirScenes
                     break;
                 case (short)ServerPacketIds.NewMonsterInfo:
                     NewMonsterInfo((S.NewMonsterInfo)p);
+                    break;
+                case (short)ServerPacketIds.ValorStatus:
+                    ValorStatusControl.UpdateStatus((S.ValorStatus)p);
                     break;
                 case (short)ServerPacketIds.NewNPCInfo:
                     NewNPCInfo((S.NewNPCInfo)p);
@@ -3218,6 +3226,9 @@ namespace Client.MirScenes
 
             switch (p.Mode)
             {
+                case AttackMode.Valor:
+                    ChatDialog.ReceiveChat("Battlefield attack mode: enemy team only.", ChatType.Hint);
+                    break;
                 case AttackMode.Peace:
                     ChatDialog.ReceiveChat(GameLanguage.ClientTextMap.GetLocalization(ClientTextKeys.AttackMode_Peace), ChatType.Hint);
                     break;
@@ -6587,6 +6598,7 @@ namespace Client.MirScenes
 
         private void RequestReincarnation()
         {
+            if (ValorStatusControl.Active) return;
             if (CMain.Time > User.DeadTime && User.CurrentAction == MirAction.Dead)
             {
                 MirMessageBox messageBox = new MirMessageBox(GameLanguage.ClientTextMap.GetLocalization(ClientTextKeys.WouldYouLikeToBeRevived), MirMessageBoxButtons.YesNo);

@@ -64,6 +64,7 @@ namespace Server.MirDatabase
         public bool AllowObserve;
 
         public int PKPoints;
+        public int ValorHonor;
 
         public bool NewDay;
 
@@ -386,6 +387,8 @@ namespace Server.MirDatabase
 
             if (version > 100)
                 HeroBehaviour = (HeroBehaviour)reader.ReadByte();
+
+            ValorHonor = version >= 118 ? Math.Clamp(reader.ReadInt32(), 0, 200000) : 0;
         }
 
         public virtual void Save(BinaryWriter writer)
@@ -567,6 +570,7 @@ namespace Server.MirDatabase
             writer.Write(CurrentHeroIndex);
             writer.Write(HeroSpawned);
             writer.Write((byte)HeroBehaviour);
+            writer.Write(Math.Clamp(ValorHonor, 0, 200000));
         }
 
         public SelectInfo ToSelectInfo()

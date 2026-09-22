@@ -994,7 +994,8 @@ public enum AttackMode : byte
     Guild = 2,
     EnemyGuild = 3,
     RedBrown = 4,
-    All = 5
+    All = 5,
+    Valor = 6
 }
 
 public enum PetMode : byte
@@ -1396,6 +1397,7 @@ public enum BuffType : byte
     MagicDefence,
     WonderDrug,
     Knapsack,
+    Valor,
 }
 
 [Flags]
@@ -1712,6 +1714,7 @@ public enum ServerPacketIds : short
     GuildTerritoryPage,
     StorageUnlockResult,
     StoragePasswordResult,
+    ValorStatus,
 }
 
 public enum ClientPacketIds : short

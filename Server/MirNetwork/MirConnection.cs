@@ -1433,6 +1433,13 @@ namespace Server.MirNetwork
         {
             if (Stage != GameStage.Game) return;
 
+            if (Envir.Valor.IsParticipant(Player))
+            {
+                Player.ReceiveChat("Battlefield attack mode is locked during Valor.", ChatType.System);
+                Enqueue(new S.ChangeAMode { Mode = AttackMode.Valor });
+                return;
+            }
+            if (p.Mode == AttackMode.Valor || !Enum.IsDefined(typeof(AttackMode), p.Mode)) return;
             Player.AMode = p.Mode;
 
             Enqueue(new S.ChangeAMode {Mode = Player.AMode});
