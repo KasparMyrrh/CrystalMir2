@@ -266,6 +266,7 @@ namespace Server.MirObjects
         public void StopGame(byte reason)
         {
             if (Node == null) return;
+            Envir.Valor.Leave(this);
 
             if (CurrentMap != null && CurrentMap.ValidPoint(CurrentLocation))
             {
