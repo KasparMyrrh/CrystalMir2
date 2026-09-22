@@ -2985,20 +2985,6 @@ namespace Server.MirObjects
                         File.WriteAllLines(tempString, new string[] { });
                         break;
 
-                    case ActionType.ValorOpen:
-                        Envir.Valor.Open(player);
-                        break;
-                    case ActionType.ValorRegister:
-                        Envir.Valor.Register(player);
-                        break;
-                    case ActionType.ValorHonor:
-                        Envir.Valor.ShowHonor(player);
-                        break;
-                    case ActionType.ValorReward:
-                        if (param.Count > 0 && int.TryParse(param[0], out int valorRewardIndex))
-                            Envir.Valor.Exchange(player, valorRewardIndex);
-                        break;
-
                     case ActionType.GlobalMessage:
                         if (!Enum.TryParse(param[1], true, out chatType)) return;
 
@@ -3100,6 +3086,19 @@ namespace Server.MirObjects
 
                 switch (act.Type)
                 {
+                    case ActionType.ValorOpen:
+                        Envir.Valor.Open(player);
+                        break;
+                    case ActionType.ValorRegister:
+                        Envir.Valor.Register(player);
+                        break;
+                    case ActionType.ValorHonor:
+                        Envir.Valor.ShowHonor(player);
+                        break;
+                    case ActionType.ValorReward:
+                        if (param.Count > 0 && int.TryParse(param[0], out int valorRewardIndex))
+                            Envir.Valor.Exchange(player, valorRewardIndex);
+                        break;
                     case ActionType.Move:
                         {
                             Map targetmap = Envir.GetMapByNameAndInstance(param[0]);
