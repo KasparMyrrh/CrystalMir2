@@ -472,6 +472,8 @@ public abstract class Packet
                 return new S.ObjectWalk();
             case (short)ServerPacketIds.ObjectRun:
                 return new S.ObjectRun();
+            case (short)ServerPacketIds.ValorStatus:
+                return new S.ValorStatus();
             case (short)ServerPacketIds.Chat:
                 return new S.Chat();
             case (short)ServerPacketIds.ObjectChat:

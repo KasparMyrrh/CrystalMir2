@@ -41,6 +41,7 @@ namespace Server.MirDatabase
                 new BuffInfo { Type = BuffType.ImmortalSkin, Properties = BuffProperty.None, StackType = BuffStackType.ResetDuration, Visible = true },
                 new BuffInfo { Type = BuffType.MagicShield, Properties = BuffProperty.None, StackType = BuffStackType.ResetDuration },
                 new BuffInfo { Type = BuffType.ElementalBarrier, Properties = BuffProperty.None, StackType = BuffStackType.ResetDuration },
+                new BuffInfo { Type = BuffType.Valor, Properties = BuffProperty.RemoveOnDeath | BuffProperty.RemoveOnExit, StackType = BuffStackType.ResetStatAndDuration, Visible = true },
 
                 //Monsters
                 new BuffInfo { Type = BuffType.HornedArcherBuff, Properties = BuffProperty.None, StackType = BuffStackType.ResetDuration, Visible = true },
